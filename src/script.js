@@ -1,60 +1,83 @@
 import { storage } from './storage.js';
 
 const htmlElements = {
-  formElement: document.querySelector('.todo-form'),
-  itemList: document.querySelector('.item-list'),
-  inputText: document.querySelector('.todo-form__input'),
+    formElement: document.querySelector('.todo-form'),
+    itemList: document.querySelector('.item-list'),
+    inputText: document.querySelector('.todo-form__input'),
 };
 
 let items = [];
 
 storage.getAll().then((res) => {
-  items = res;
-  renderAllTask();
+    items = res;
+    renderAllTask();
 });
 
 htmlElements.formElement.addEventListener('submit', createItem);
 htmlElements.itemList.addEventListener('click', deleteItem);
 
+function getHtmlItemTemplate(item) {
+    return `
+  <div class="item" data-id="${item.id}">
+    ${item.text}
+    <button class="delete-button">x</button>
+  </div>`;
+}
+
 function renderAllTask() {
-  let htmlString = '';
+    let htmlString = '';
 
-  for (let i = 0; i < items.length; i++) {
-    htmlString += `<div class="item" data-id="${items[i].id}">${items[i].text}</div>`;
-  }
+    for (let i = 0; i < items.length; i++) {
+        htmlString += getHtmlItemTemplate(items[i]);
+    }
 
-  htmlElements.itemList.innerHTML = htmlString;
+    htmlElements.itemList.innerHTML = htmlString;
 }
 
 function createItem(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  const text = htmlElements.inputText.value;
+    const text = htmlElements.inputText.value;
 
-  if (text === '') {
-    return;
-  }
+    if (text === '') {
+        return;
+    }
 
-  storage.create(text).then((res) => {
-    const htmlString = `<div class="item" data-id="${res.id}">${text}</div>`;
+    storage.create(text).then((res) => {
+        const htmlString = getHtmlItemTemplate({
+            id: res.id,
+            text: text,
+        });
 
-    items.push({
-      text: text,
-      id: res.id,
+        items.push({
+            text: text,
+            id: res.id,
+        });
+
+        htmlElements.itemList.innerHTML += htmlString;
+        htmlElements.inputText.value = '';
     });
-
-    htmlElements.itemList.innerHTML += htmlString;
-    htmlElements.inputText.value = '';
-  });
 }
 
 function deleteItem(event) {
-  const id = event.target.dataset.id;
-  const element = document.querySelector(`[data-id="${id}"]`);
-  element.remove();
+    if (event.target.classList.contains('delete-button') !== true) {
+        return;
+    }
 
-  //   items = items.filter(function (item) {
-  //     return item.id !== id;
-  //   });
-  //   storage.updateItems(items);
+    const id = event.target.parentElement.dataset.id;
+    const element = document.querySelector(`[data-id="${id}"]`);
+
+    // debugger;
+    document.querySelector('body').style.backgroundColor = 'red';
+    storage
+        .delete(id)
+        .then(function() {
+            element.remove();
+        })
+        .catch(function() {
+            alert('Сервер упал!!!');
+        })
+        .finally(function() {
+            document.querySelector('body').style.backgroundColor = null;
+        });
 }
