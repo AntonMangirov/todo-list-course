@@ -1,23 +1,23 @@
 import { storage } from './storage.js';
 
 const htmlElements = {
-    formElement: document.querySelector('.todo-form'),
-    itemList: document.querySelector('.item-list'),
-    inputText: document.querySelector('.todo-form__input'),
+  formElement: document.querySelector('.todo-form'),
+  itemList: document.querySelector('.item-list'),
+  inputText: document.querySelector('.todo-form__input'),
 };
 
 let items = [];
 
 storage.getAll().then((res) => {
-    items = res;
-    renderAllTask();
+  items = res;
+  renderAllTask();
 });
 
 htmlElements.formElement.addEventListener('submit', createItem);
 htmlElements.itemList.addEventListener('click', deleteItem);
 
 function getHtmlItemTemplate(item) {
-    return `
+  return `
   <div class="item" data-id="${item.id}">
     ${item.text}
     <button class="delete-button">x</button>
@@ -25,59 +25,59 @@ function getHtmlItemTemplate(item) {
 }
 
 function renderAllTask() {
-    let htmlString = '';
+  let htmlString = '';
 
-    for (let i = 0; i < items.length; i++) {
-        htmlString += getHtmlItemTemplate(items[i]);
-    }
+  for (let i = 0; i < items.length; i++) {
+    htmlString += getHtmlItemTemplate(items[i]);
+  }
 
-    htmlElements.itemList.innerHTML = htmlString;
+  htmlElements.itemList.innerHTML = htmlString;
 }
 
 function createItem(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const text = htmlElements.inputText.value;
+  const text = htmlElements.inputText.value;
 
-    if (text === '') {
-        return;
-    }
+  if (text === '') {
+    return;
+  }
 
-    storage.create(text).then((res) => {
-        const htmlString = getHtmlItemTemplate({
-            id: res.id,
-            text: text,
-        });
-
-        items.push({
-            text: text,
-            id: res.id,
-        });
-
-        htmlElements.itemList.innerHTML += htmlString;
-        htmlElements.inputText.value = '';
+  storage.create(text).then((res) => {
+    const htmlString = getHtmlItemTemplate({
+      id: res.id,
+      text: text,
     });
+
+    items.push({
+      text: text,
+      id: res.id,
+    });
+
+    htmlElements.itemList.innerHTML += htmlString;
+    htmlElements.inputText.value = '';
+  });
 }
 
 function deleteItem(event) {
-    if (event.target.classList.contains('delete-button') !== true) {
-        return;
-    }
+  if (event.target.classList.contains('delete-button') !== true) {
+    return;
+  }
 
-    const id = event.target.parentElement.dataset.id;
-    const element = document.querySelector(`[data-id="${id}"]`);
+  const id = event.target.parentElement.dataset.id;
+  const element = document.querySelector(`[data-id="${id}"]`);
 
-    // debugger;
-    document.querySelector('body').style.backgroundColor = 'red';
-    storage
-        .delete(id)
-        .then(function() {
-            element.remove();
-        })
-        .catch(function() {
-            alert('Сервер упал!!!');
-        })
-        .finally(function() {
-            document.querySelector('body').style.backgroundColor = null;
-        });
+  // debugger;
+  document.querySelector('body').style.backgroundColor = 'red';
+  storage
+    .delete(id)
+    .then(function () {
+      element.remove();
+    })
+    .catch(function () {
+      alert('Сервер упал!!!');
+    })
+    .finally(function () {
+      document.querySelector('body').style.backgroundColor = null;
+    });
 }
